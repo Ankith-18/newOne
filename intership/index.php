@@ -1,3 +1,10 @@
+<?php
+session_start();
+
+// Check if user is logged in
+$currentUser = isset($_SESSION['user']) ? $_SESSION['user'] : null;
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,13 +30,28 @@
                 <a href="#" class="nav-link" data-page="routes">Routes</a>
                 <a href="#" class="nav-link" data-page="offers">Offers</a>
                 <a href="#" class="nav-link" data-page="contact">Contact</a>
-                <div class="auth-buttons" id="authButtons">
+                
+                <!-- Auth Buttons (shown when not logged in) -->
+                <div class="auth-buttons" id="authButtons" style="display: <?php echo $currentUser ? 'none' : 'flex'; ?>;">
                     <button class="auth-btn login-btn" id="loginBtn">Login</button>
                     <button class="auth-btn signup-btn" id="signupBtn">Sign Up</button>
                 </div>
-                <div class="user-menu" id="userMenu" style="display: none;">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <span id="userName">User</span>
+                
+                <!-- User Menu (shown when logged in) -->
+                <div class="user-menu" id="userMenu" style="display: <?php echo $currentUser ? 'flex' : 'none'; ?>;">
+                    <div class="user-avatar" id="userAvatar">
+                        <?php 
+                            if($currentUser) {
+                                $initial = substr($currentUser['full_name'] ?? 'U', 0, 1);
+                                echo strtoupper($initial);
+                            } else {
+                                echo 'U';
+                            }
+                        ?>
+                    </div>
+                    <span id="userName">
+                        <?php echo $currentUser ? ($currentUser['full_name'] ?? 'User') : 'User'; ?>
+                    </span>
                     <button class="auth-btn login-btn" id="logoutBtn">Logout</button>
                 </div>
             </div>
@@ -339,6 +361,7 @@
     <!-- Auth Modal -->
     <div class="auth-modal" id="authModal">
         <div class="auth-modal-content">
+            <button class="close-btn auth-close-btn">&times;</button>
             <div class="auth-tabs">
                 <div class="auth-tab active" id="loginTab">Login</div>
                 <div class="auth-tab" id="signupTab">Sign Up</div>
@@ -360,6 +383,23 @@
         </div>
     </div>
 
+    <!-- Add API Base URL Script -->
+    <script>
+        // Set API base URL dynamically
+        const API_BASE_URL = '<?php 
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+            $host = $_SERVER['HTTP_HOST'];
+            $folder = dirname($_SERVER['PHP_SELF']);
+            echo $protocol . "://" . $host . $folder . "/api";
+        ?>';
+        
+        // Pass PHP session data to JavaScript
+        const PHP_CURRENT_USER = <?php echo $currentUser ? json_encode($currentUser) : 'null'; ?>;
+        
+        console.log('API Base URL:', API_BASE_URL);
+        console.log('PHP User:', PHP_CURRENT_USER);
+    </script>
+    
     <script src="script.js"></script>
 </body>
 </html>

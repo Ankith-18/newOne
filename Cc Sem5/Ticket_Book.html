@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftRide - 3D Bus Booking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light), #dfe6e9);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--dark);
+        }
+
+        /* Header Styles */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4);
+            z-index: 10;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 5%;
+            width: 90%;
+            height: 30px;
+            background: var(--primary);
+            transform: rotateX(60deg);
+            filter: blur(15px);
+            opacity: 0.7;
+            z-index: -1;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transform: translateZ(20px);
+        }
+
+        .logo i {
+            color: var(--accent);
+            animation: bounce 2s infinite;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateZ(10px);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .auth-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .login-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .login-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .signup-btn {
+            background: var(--accent);
+            color: white;
+        }
+
+        .signup-btn:hover {
+            background: #e84393;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            perspective: 1000px;
+        }
+
+        .search-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-card:hover {
+            transform: rotateY(5deg) rotateX(5deg) translateY(-5px);
+        }
+
+        .search-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        .search-card h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-group input, .form-group select {
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            align-self: flex-end;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+            transform-style: preserve-3d;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px) translateZ(10px);
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.6);
+        }
+
+        /* Bus Cards */
+        .bus-list {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            perspective: 1000px;
+        }
+
+        .bus-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s;
+            transform-style: preserve-3d;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .bus-card:hover {
+            transform: rotateY(10deg) scale(1.03);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .bus-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: var(--primary);
+        }
+
+        .bus-card-header {
+            padding: 1.5rem;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .bus-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .bus-type {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: var(--secondary);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .bus-card-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .bus-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bus-info-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .bus-info-item i {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .bus-info-item span {
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+
+        .bus-timings {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .timing {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timing-time {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .timing-place {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .bus-separator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        .bus-separator i {
+            margin: 0.3rem 0;
+        }
+
+        .bus-price {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .price-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .book-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .book-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        /* Features Section */
+        .features {
+            max-width: 1200px;
+            margin: 5rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            perspective: 1000px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.5s;
+            transform-style: preserve-3d;
+        }
+
+        .feature-card:hover {
+            transform: rotateX(5deg) translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            transition: all 0.5s;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: rotateY(180deg) translateZ(20px);
+            color: var(--accent);
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+        }
+
+        .feature-desc {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 5%;
+            width: 90%;
+            height: 30px;
+            background: var(--dark);
+            transform: rotateX(-60deg);
+            filter: blur(15px);
+            opacity: 0.7;
+            z-index: -1;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: left;
+        }
+
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 50%;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #ddd;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-5px) translateZ(10px);
+        }
+
+        .copyright {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Animations */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) translateZ(0);
+            }
+            50% {
+                transform: translateY(-10px) translateZ(10px);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateZ(0);
+            }
+            50% {
+                transform: translateY(-20px) translateZ(20px);
+            }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                background: var(--primary);
+                padding: 1rem;
+                z-index: 100;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                margin: 2rem auto;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            transform-style: preserve-3d;
+            animation: modalEnter 0.5s forwards;
+            position: relative;
+        }
+
+        @keyframes modalEnter {
+            from {
+                transform: rotateX(90deg) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: rotateX(0) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .seat-selection {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .seat {
+            width: 40px;
+            height: 40px;
+            background: #eee;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            transform-style: preserve-3d;
+        }
+
+        .seat.selected {
+            background: var(--success);
+            color: white;
+            transform: translateZ(10px);
+        }
+
+        .seat.booked {
+            background: #ddd;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .seat.available:hover {
+            background: var(--secondary);
+            color: white;
+            transform: translateZ(5px);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .confirm-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .confirm-btn:hover {
+            background: #00a884;
+            transform: translateY(-2px);
+        }
+
+        .cancel-btn {
+            background: #eee;
+            color: var(--dark);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+        }
+
+        /* Floating bus animation */
+        .floating-bus {
+            position: absolute;
+            font-size: 3rem;
+            color: var(--primary);
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.2;
+            z-index: -1;
+        }
+
+        .bus-1 {
+            top: 20%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .bus-2 {
+            top: 60%;
+            right: 10%;
+            animation-delay: 1s;
+        }
+
+        .bus-3 {
+            bottom: 10%;
+            left: 15%;
+            animation-delay: 2s;
+        }
+
+        /* Auth Modal */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .auth-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            transform-style: preserve-3d;
+            animation: modalEnter 0.5s forwards;
+            position: relative;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .auth-form input {
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        .auth-submit-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .auth-submit-btn:hover {
+            background: var(--secondary);
+        }
+
+        .auth-error {
+            color: var(--danger);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* My Bookings */
+        .my-bookings {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            perspective: 1000px;
+        }
+
+        .bookings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .bookings-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .bookings-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            transform-style: preserve-3d;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-5px) translateZ(10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .booking-id {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .booking-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-confirmed {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-pending {
+            background: var(--warning);
+            color: var(--dark);
+        }
+
+        .status-cancelled {
+            background: var(--danger);
+            color: white;
+        }
+
+        .booking-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .booking-route {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .booking-bus {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .booking-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .booking-seats {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .booking-price {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .cancel-booking-btn {
+            background: var(--danger);
+            color: white;
+        }
+
+        .cancel-booking-btn:hover {
+            background: #c23616;
+        }
+
+        .view-ticket-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .view-ticket-btn:hover {
+            background: var(--secondary);
+        }
+
+        /* Page Navigation */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transform-style: preserve-3d;
+            transition: transform 0.3s;
+        }
+
+        .filter-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .filter-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .filter-group select {
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .apply-filters-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .apply-filters-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .reset-filters-btn {
+            background: #eee;
+            color: var(--dark);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .reset-filters-btn:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+        }
+
+        /* Bus Type Tags */
+        .bus-type-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .type-sleeper {
+            background: var(--primary);
+            color: white;
+        }
+
+        .type-semi-sleeper {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .type-seater {
+            background: var(--accent);
+            color: white;
+        }
+
+        .type-luxury {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Distance Info */
+        .distance-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .distance-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .distance-value {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .distance-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-bus"></i>
+                <span>SwiftRide</span>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="#" class="nav-link active" data-page="home">Home</a>
+                <a href="#" class="nav-link" data-page="bookings">My Bookings</a>
+                <a href="#" class="nav-link" data-page="routes">Routes</a>
+                <a href="#" class="nav-link" data-page="offers">Offers</a>
+                <a href="#" class="nav-link" data-page="contact">Contact</a>
+                <div class="auth-buttons" id="authButtons">
+                    <button class="auth-btn login-btn" id="loginBtn">Login</button>
+                    <button class="auth-btn signup-btn" id="signupBtn">Sign Up</button>
+                </div>
+                <div class="user-menu" id="userMenu" style="display: none;">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span id="userName">User</span>
+                    <button class="auth-btn login-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="floating-bus bus-1">
+        <i class="fas fa-bus"></i>
+    </div>
+    <div class="floating-bus bus-2">
+        <i class="fas fa-bus"></i>
+    </div>
+    <div class="floating-bus bus-3">
+        <i class="fas fa-bus"></i>
+    </div>
+
+    <!-- Home Page -->
+    <div id="homePage" class="page active">
+        <section class="hero">
+            <div class="search-card floating">
+                <h2>Book Your Bus Journey</h2>
+                <form class="search-form" id="searchForm">
+                    <div class="form-group">
+                        <label for="from">From</label>
+                        <input type="text" id="from" placeholder="Departure city" required list="cities">
+                    </div>
+                    <div class="form-group">
+                        <label for="to">To</label>
+                        <input type="text" id="to" placeholder="Destination city" required list="cities">
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Travel Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="passengers">Passengers</label>
+                        <select id="passengers">
+                            <option value="1">1 Passenger</option>
+                            <option value="2">2 Passengers</option>
+                            <option value="3">3 Passengers</option>
+                            <option value="4">4 Passengers</option>
+                            <option value="5">5 Passengers</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="search-btn">Search Buses <i class="fas fa-search"></i></button>
+                </form>
+                <datalist id="cities">
+                    <option value="Delhi">
+                    <option value="Mumbai">
+                    <option value="Bangalore">
+                    <option value="Chennai">
+                    <option value="Kolkata">
+                    <option value="Hyderabad">
+                    <option value="Pune">
+                    <option value="Jaipur">
+                    <option value="Ahmedabad">
+                    <option value="Lucknow">
+                </datalist>
+            </div>
+        </section>
+
+        <section class="filter-section" id="filterSection" style="display: none;">
+            <div class="filter-card">
+                <div class="filter-header">
+                    <h3 class="filter-title">Filter Buses</h3>
+                </div>
+                <div class="filter-options">
+                    <div class="filter-group">
+                        <label for="busType">Bus Type</label>
+                        <select id="busType">
+                            <option value="all">All Types</option>
+                            <option value="sleeper">AC Sleeper</option>
+                            <option value="semi-sleeper">AC Semi-Sleeper</option>
+                            <option value="seater">Non-AC Seater</option>
+                            <option value="luxury">Luxury Bus</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="departureTime">Departure Time</label>
+                        <select id="departureTime">
+                            <option value="all">Any Time</option>
+                            <option value="morning">Morning (6AM - 12PM)</option>
+                            <option value="afternoon">Afternoon (12PM - 6PM)</option>
+                            <option value="evening">Evening (6PM - 12AM)</option>
+                            <option value="night">Night (12AM - 6AM)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="priceRange">Price Range</label>
+                        <select id="priceRange">
+                            <option value="all">Any Price</option>
+                            <option value="budget">Budget (₹0 - ₹800)</option>
+                            <option value="medium">Medium (₹800 - ₹1500)</option>
+                            <option value="premium">Premium (₹1500+)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="amenities">Amenities</label>
+                        <select id="amenities">
+                            <option value="all">All Amenities</option>
+                            <option value="wifi">WiFi</option>
+                            <option value="charging">Charging Port</option>
+                            <option value="blanket">Blanket</option>
+                            <option value="snacks">Snacks</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button class="reset-filters-btn" id="resetFilters">Reset</button>
+                    <button class="apply-filters-btn" id="applyFilters">Apply Filters</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="bus-list" id="busList">
+            <!-- Buses will be loaded here by JavaScript -->
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="feature-title">Safe Travel</h3>
+                <p class="feature-desc">Our buses are regularly sanitized and equipped with safety measures for your secure journey.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h3 class="feature-title">Best Offers</h3>
+                <p class="feature-desc">Enjoy exclusive discounts and cashback offers on every booking you make with us.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3 class="feature-title">24/7 Support</h3>
+                <p class="feature-desc">Our customer care team is available round the clock to assist you with any queries.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <h3 class="feature-title">Wide Network</h3>
+                <p class="feature-desc">Connect to over 5000 destinations across the country with our extensive bus network.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- My Bookings Page -->
+    <div id="bookingsPage" class="page">
+        <div class="my-bookings">
+            <div class="bookings-header">
+                <h2 class="bookings-title">My Bookings</h2>
+            </div>
+            <div class="bookings-list" id="bookingsList">
+                <!-- Bookings will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Routes Page -->
+    <div id="routesPage" class="page">
+        <div class="my-bookings">
+            <div class="bookings-header">
+                <h2 class="bookings-title">Popular Routes</h2>
+            </div>
+            <div class="bus-list" id="routesList">
+                <!-- Routes will be loaded here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Offers Page -->
+    <div id="offersPage" class="page">
+        <div class="my-bookings">
+            <div class="bookings-header">
+                <h2 class="bookings-title">Special Offers</h2>
+            </div>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <h3 class="feature-title">First Ride Discount</h3>
+                    <p class="feature-desc">Get 20% off on your first booking with SwiftRide. Use code: FIRST20</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <h3 class="feature-title">Weekend Special</h3>
+                    <p class="feature-desc">Enjoy 15% off on all weekend travels. Book now and save!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Group Booking</h3>
+                    <p class="feature-desc">Travel with 4 or more people and get 25% discount on total fare.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Flash Sale</h3>
+                    <p class="feature-desc">Limited time offer! Book any bus in the next 24 hours and get 30% off.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contactPage" class="page">
+        <div class="my-bookings">
+            <div class="bookings-header">
+                <h2 class="bookings-title">Contact Us</h2>
+            </div>
+            <div class="search-card">
+                <h2>Get in Touch</h2>
+                <form class="search-form" id="contactForm">
+                    <div class="form-group">
+                        <label for="contactName">Your Name</label>
+                        <input type="text" id="contactName" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactEmail">Email Address</label>
+                        <input type="email" id="contactEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactSubject">Subject</label>
+                        <input type="text" id="contactSubject" placeholder="Subject of your message" required>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="contactMessage">Message</label>
+                        <textarea id="contactMessage" placeholder="Your message" rows="5" style="padding: 0.8rem 1rem; border: 1px solid #ddd; border-radius: 10px; font-size: 1rem; resize: vertical;" required></textarea>
+                    </div>
+                    <button type="submit" class="search-btn">Send Message <i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>SwiftRide</h3>
+                <p>Your trusted partner for comfortable and affordable bus journeys across the country.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="#" class="nav-link" data-page="home">Home</a></li>
+                    <li><a href="#" class="nav-link" data-page="bookings">My Bookings</a></li>
+                    <li><a href="#" class="nav-link" data-page="routes">Routes</a></li>
+                    <li><a href="#" class="nav-link" data-page="offers">Offers</a></li>
+                    <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Support</h3>
+                <ul class="footer-links">
+                    <li><a href="#">FAQs</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Refund Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Us</h3>
+                <ul class="footer-links">
+                    <li><i class="fas fa-phone"></i> +91 98765 43210</li>
+                    <li><i class="fas fa-envelope"></i> info@swiftride.in</li>
+                    <li><i class="fas fa-map-marker-alt"></i> 123 Bus Street, Transport City</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            &copy; 2025 SwiftRide. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Booking Modal -->
+    <div class="modal" id="bookingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Book Your Seat</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4 id="modalBusName"></h4>
+                <p id="modalBusTiming"></p>
+                <div class="seat-selection" id="seatSelection">
+                    <!-- Seats will be generated by JavaScript -->
+                </div>
+                <div class="selected-seats">
+                    <strong>Selected Seats:</strong> <span id="selectedSeatsDisplay">None</span>
+                </div>
+                <div class="total-price">
+                    <strong>Total Price:</strong> ₹<span id="totalPrice">0</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" id="cancelBooking">Cancel</button>
+                <button class="confirm-btn" id="confirmBooking">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-content">
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="loginTab">Login</div>
+                <div class="auth-tab" id="signupTab">Sign Up</div>
+            </div>
+            <form class="auth-form" id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <div class="auth-error" id="loginError"></div>
+                <button type="submit" class="auth-submit-btn">Login</button>
+            </form>
+            <form class="auth-form" id="signupForm" style="display: none;">
+                <input type="text" id="signupName" placeholder="Full Name" required>
+                <input type="email" id="signupEmail" placeholder="Email" required>
+                <input type="password" id="signupPassword" placeholder="Password" required>
+                <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                <div class="auth-error" id="signupError"></div>
+                <button type="submit" class="auth-submit-btn">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Backend API URL - In a real application, this would point to your actual backend
+        const API_BASE_URL = 'https://jsonplaceholder.typicode.com'; // Using a mock API for demonstration
+
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Page Navigation
+        const navLinksElements = document.querySelectorAll('.nav-link');
+        const pages = document.querySelectorAll('.page');
+
+        navLinksElements.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageId = link.getAttribute('data-page') + 'Page';
+                
+                // Update active nav link
+                navLinksElements.forEach(navLink => navLink.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Show selected page
+                pages.forEach(page => page.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                
+                // Close mobile menu
+                navLinks.classList.remove('active');
+                
+                // Load page-specific content
+                if (pageId === 'bookingsPage') {
+                    loadUserBookings();
+                } else if (pageId === 'routesPage') {
+                    loadPopularRoutes();
+                }
+            });
+        });
+
+        // Authentication State
+        let currentUser = null;
+
+        // Check if user is logged in (from localStorage)
+        function checkAuthStatus() {
+            const userData = localStorage.getItem('swiftRideUser');
+            if (userData) {
+                currentUser = JSON.parse(userData);
+                updateUIForLoggedInUser();
+            }
+        }
+
+        // Update UI for logged in user
+        function updateUIForLoggedInUser() {
+            document.getElementById('authButtons').style.display = 'none';
+            document.getElementById('userMenu').style.display = 'flex';
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+
+        // Update UI for logged out user
+        function updateUIForLoggedOutUser() {
+            document.getElementById('authButtons').style.display = 'flex';
+            document.getElementById('userMenu').style.display = 'none';
+        }
+
+        // Auth Modal
+        const authModal = document.getElementById('authModal');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const loginTab = document.getElementById('loginTab');
+        const signupTab = document.getElementById('signupTab');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Show auth modal
+        loginBtn.addEventListener('click', () => {
+            authModal.style.display = 'flex';
+            loginTab.click();
+        });
+
+        signupBtn.addEventListener('click', () => {
+            authModal.style.display = 'flex';
+            signupTab.click();
+        });
+
+        // Switch between login and signup tabs
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('active');
+            signupTab.classList.remove('active');
+            loginForm.style.display = 'flex';
+            signupForm.style.display = 'none';
+        });
+
+        signupTab.addEventListener('click', () => {
+            signupTab.classList.add('active');
+            loginTab.classList.remove('active');
+            signupForm.style.display = 'flex';
+            loginForm.style.display = 'none';
+        });
+
+        // Close auth modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                authModal.style.display = 'none';
+            }
+        });
+
+        // Login form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
+
+            try {
+                // In a real app, this would be an API call to your backend
+                // For demo purposes, we're using a mock authentication
+                if (email && password) {
+                    // Simulate API call delay
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Mock user data
+                    currentUser = {
+                        id: 1,
+                        name: 'Raj Sharma',
+                        email: email
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('swiftRideUser', JSON.stringify(currentUser));
+                    
+                    // Update UI
+                    updateUIForLoggedInUser();
+                    
+                    // Close modal
+                    authModal.style.display = 'none';
+                    
+                    // Clear form
+                    loginForm.reset();
+                    errorElement.style.display = 'none';
+                    
+                    // Show success message
+                    alert('Login successful!');
+                } else {
+                    throw new Error('Please fill in all fields');
+                }
+            } catch (error) {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            }
+        });
+
+        // Signup form submission
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            const errorElement = document.getElementById('signupError');
+
+            try {
+                if (password !== confirmPassword) {
+                    throw new Error('Passwords do not match');
+                }
+
+                if (name && email && password) {
+                    // Simulate API call delay
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Mock user data
+                    currentUser = {
+                        id: 1,
+                        name: name,
+                        email: email
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('swiftRideUser', JSON.stringify(currentUser));
+                    
+                    // Update UI
+                    updateUIForLoggedInUser();
+                    
+                    // Close modal
+                    authModal.style.display = 'none';
+                    
+                    // Clear form
+                    signupForm.reset();
+                    errorElement.style.display = 'none';
+                    
+                    // Show success message
+                    alert('Account created successfully!');
+                } else {
+                    throw new Error('Please fill in all fields');
+                }
+            } catch (error) {
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            currentUser = null;
+            localStorage.removeItem('swiftRideUser');
+            updateUIForLoggedOutUser();
+            alert('You have been logged out.');
+        });
+
+        // Sample Bus Data with Indian Cities and Rupee Prices
+        const buses = [
+            {
+                id: 1,
+                name: "Swift Deluxe",
+                type: "AC Sleeper",
+                departure: "08:00 AM",
+                arrival: "02:00 PM",
+                from: "Delhi",
+                to: "Jaipur",
+                distance: "280 km",
+                duration: "6 hours",
+                amenities: ["wifi", "charging", "blanket", "water"],
+                price: 1200,
+                seats: 36,
+                bookedSeats: [4, 5, 12, 13, 20, 21],
+                busType: "sleeper",
+                departureTime: "morning"
+            },
+            {
+                id: 2,
+                name: "City Express",
+                type: "AC Semi-Sleeper",
+                departure: "10:30 AM",
+                arrival: "05:30 PM",
+                from: "Mumbai",
+                to: "Pune",
+                distance: "150 km",
+                duration: "7 hours",
+                amenities: ["wifi", "charging", "water"],
+                price: 800,
+                seats: 40,
+                bookedSeats: [1, 2, 15, 16, 25, 26, 35, 36],
+                busType: "semi-sleeper",
+                departureTime: "morning"
+            },
+            {
+                id: 3,
+                name: "Premium Travels",
+                type: "Non-AC Seater",
+                departure: "07:00 AM",
+                arrival: "12:00 PM",
+                from: "Bangalore",
+                to: "Chennai",
+                distance: "350 km",
+                duration: "5 hours",
+                amenities: ["charging", "water"],
+                price: 600,
+                seats: 42,
+                bookedSeats: [3, 4, 10, 11, 20, 21, 30, 31, 40, 41],
+                busType: "seater",
+                departureTime: "morning"
+            },
+            {
+                id: 4,
+                name: "Luxury Line",
+                type: "AC Sleeper",
+                departure: "11:00 PM",
+                arrival: "07:00 AM",
+                from: "Kolkata",
+                to: "Patna",
+                distance: "550 km",
+                duration: "8 hours",
+                amenities: ["wifi", "charging", "blanket", "water", "snacks"],
+                price: 1500,
+                seats: 32,
+                bookedSeats: [5, 6, 12, 13, 20, 21, 28, 29],
+                busType: "luxury",
+                departureTime: "night"
+            },
+            {
+                id: 5,
+                name: "Express Connect",
+                type: "AC Semi-Sleeper",
+                departure: "02:00 PM",
+                arrival: "08:00 PM",
+                from: "Hyderabad",
+                to: "Bangalore",
+                distance: "570 km",
+                duration: "6 hours",
+                amenities: ["wifi", "charging", "water"],
+                price: 1100,
+                seats: 38,
+                bookedSeats: [7, 8, 15, 16, 25, 26],
+                busType: "semi-sleeper",
+                departureTime: "afternoon"
+            },
+            {
+                id: 6,
+                name: "Comfort Ride",
+                type: "Non-AC Seater",
+                departure: "06:00 PM",
+                arrival: "11:00 PM",
+                from: "Ahmedabad",
+                to: "Mumbai",
+                distance: "530 km",
+                duration: "5 hours",
+                amenities: ["charging", "water"],
+                price: 700,
+                seats: 44,
+                bookedSeats: [10, 11, 20, 21, 30, 31, 40, 41],
+                busType: "seater",
+                departureTime: "evening"
+            }
+        ];
+
+        // Search Form Submission
+        const searchForm = document.getElementById('searchForm');
+        const busList = document.getElementById('busList');
+        const filterSection = document.getElementById('filterSection');
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const from = document.getElementById('from').value;
+            const to = document.getElementById('to').value;
+            const date = document.getElementById('date').value;
+            const passengers = document.getElementById('passengers').value;
+
+            // Show filter section
+            filterSection.style.display = 'block';
+
+            // In a real app, you would fetch buses based on search criteria
+            // Here we'll filter buses based on from and to
+            let filteredBuses = buses;
+            if (from && to) {
+                filteredBuses = buses.filter(bus => 
+                    bus.from.toLowerCase().includes(from.toLowerCase()) && 
+                    bus.to.toLowerCase().includes(to.toLowerCase())
+                );
+            }
+            
+            displayBuses(filteredBuses);
+        });
+
+        // Filter functionality
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+
+        applyFiltersBtn.addEventListener('click', () => {
+            applyFilters();
+        });
+
+        resetFiltersBtn.addEventListener('click', () => {
+            resetFilters();
+        });
+
+        function applyFilters() {
+            const busType = document.getElementById('busType').value;
+            const departureTime = document.getElementById('departureTime').value;
+            const priceRange = document.getElementById('priceRange').value;
+            const amenities = document.getElementById('amenities').value;
+
+            let filteredBuses = buses;
+
+            // Filter by bus type
+            if (busType !== 'all') {
+                filteredBuses = filteredBuses.filter(bus => bus.busType === busType);
+            }
+
+            // Filter by departure time
+            if (departureTime !== 'all') {
+                filteredBuses = filteredBuses.filter(bus => bus.departureTime === departureTime);
+            }
+
+            // Filter by price range
+            if (priceRange !== 'all') {
+                if (priceRange === 'budget') {
+                    filteredBuses = filteredBuses.filter(bus => bus.price <= 800);
+                } else if (priceRange === 'medium') {
+                    filteredBuses = filteredBuses.filter(bus => bus.price > 800 && bus.price <= 1500);
+                } else if (priceRange === 'premium') {
+                    filteredBuses = filteredBuses.filter(bus => bus.price > 1500);
+                }
+            }
+
+            // Filter by amenities
+            if (amenities !== 'all') {
+                filteredBuses = filteredBuses.filter(bus => bus.amenities.includes(amenities));
+            }
+
+            displayBuses(filteredBuses);
+        }
+
+        function resetFilters() {
+            document.getElementById('busType').value = 'all';
+            document.getElementById('departureTime').value = 'all';
+            document.getElementById('priceRange').value = 'all';
+            document.getElementById('amenities').value = 'all';
+            
+            // Display all buses
+            displayBuses(buses);
+        }
+
+        // Display Buses
+        function displayBuses(buses) {
+            busList.innerHTML = '';
+            
+            if (buses.length === 0) {
+                busList.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 2rem;">No buses found for your search criteria. Please try different filters.</p>';
+                return;
+            }
+            
+            buses.forEach(bus => {
+                const busCard = document.createElement('div');
+                busCard.className = 'bus-card';
+                busCard.innerHTML = `
+                    <div class="bus-card-header">
+                        <h3 class="bus-name">${bus.name}</h3>
+                        <span class="bus-type ${bus.busType === 'sleeper' ? 'type-sleeper' : bus.busType === 'semi-sleeper' ? 'type-semi-sleeper' : bus.busType === 'seater' ? 'type-seater' : 'type-luxury'}">${bus.type}</span>
+                    </div>
+                    <div class="bus-card-body">
+                        <div class="bus-info">
+                            <div class="bus-info-item">
+                                <i class="fas fa-wifi ${bus.amenities.includes('wifi') ? '' : 'disabled'}"></i>
+                                <span>WiFi</span>
+                            </div>
+                            <div class="bus-info-item">
+                                <i class="fas fa-bolt ${bus.amenities.includes('charging') ? '' : 'disabled'}"></i>
+                                <span>Charging</span>
+                            </div>
+                            <div class="bus-info-item">
+                                <i class="fas fa-utensils ${bus.amenities.includes('snacks') ? '' : 'disabled'}"></i>
+                                <span>Snacks</span>
+                            </div>
+                            <div class="bus-info-item">
+                                <i class="fas fa-blanket ${bus.amenities.includes('blanket') ? '' : 'disabled'}"></i>
+                                <span>Blanket</span>
+                            </div>
+                        </div>
+                        <div class="bus-timings">
+                            <div class="timing">
+                                <div class="timing-time">${bus.departure}</div>
+                                <div class="timing-place">${bus.from}</div>
+                            </div>
+                            <div class="bus-separator">
+                                <i class="fas fa-circle"></i>
+                                <i class="fas fa-ellipsis-v"></i>
+                                <i class="fas fa-circle"></i>
+                            </div>
+                            <div class="timing">
+                                <div class="timing-time">${bus.arrival}</div>
+                                <div class="timing-place">${bus.to}</div>
+                            </div>
+                        </div>
+                        <div class="distance-info">
+                            <div class="distance-item">
+                                <div class="distance-value">${bus.distance}</div>
+                                <div class="distance-label">Distance</div>
+                            </div>
+                            <div class="distance-item">
+                                <div class="distance-value">${bus.duration}</div>
+                                <div class="distance-label">Duration</div>
+                            </div>
+                            <div class="distance-item">
+                                <div class="distance-value">${bus.seats - bus.bookedSeats.length}</div>
+                                <div class="distance-label">Seats Available</div>
+                            </div>
+                        </div>
+                        <div class="bus-price">
+                            <div>
+                                <span class="price-amount">₹${bus.price}</span>
+                                <span>per seat</span>
+                            </div>
+                            <button class="book-btn" data-id="${bus.id}">Book Now</button>
+                        </div>
+                    </div>
+                `;
+                busList.appendChild(busCard);
+            });
+
+            // Add event listeners to book buttons
+            document.querySelectorAll('.book-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    if (!currentUser) {
+                        alert('Please login to book a bus.');
+                        loginBtn.click();
+                        return;
+                    }
+                    
+                    const busId = parseInt(e.target.getAttribute('data-id'));
+                    const bus = buses.find(b => b.id === busId);
+                    openBookingModal(bus);
+                });
+            });
+        }
+
+        // Booking Modal
+        const bookingModal = document.getElementById('bookingModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelBooking = document.getElementById('cancelBooking');
+        const modalBusName = document.getElementById('modalBusName');
+        const modalBusTiming = document.getElementById('modalBusTiming');
+        const seatSelection = document.getElementById('seatSelection');
+        const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
+        const totalPrice = document.getElementById('totalPrice');
+        const confirmBooking = document.getElementById('confirmBooking');
+
+        let selectedBus = null;
+        let selectedSeats = [];
+
+        function openBookingModal(bus) {
+            selectedBus = bus;
+            selectedSeats = [];
+            
+            modalBusName.textContent = `${bus.name} (${bus.type})`;
+            modalBusTiming.textContent = `${bus.from} to ${bus.to} | ${bus.departure} - ${bus.arrival}`;
+            
+            // Generate seats
+            seatSelection.innerHTML = '';
+            for (let i = 1; i <= bus.seats; i++) {
+                const seat = document.createElement('div');
+                seat.className = `seat ${bus.bookedSeats.includes(i) ? 'booked' : 'available'}`;
+                seat.textContent = i;
+                seat.setAttribute('data-seat', i);
+                
+                if (!bus.bookedSeats.includes(i)) {
+                    seat.addEventListener('click', toggleSeatSelection);
+                }
+                
+                seatSelection.appendChild(seat);
+            }
+            
+            updateSelectionDisplay();
+            bookingModal.style.display = 'flex';
+        }
+
+        function toggleSeatSelection(e) {
+            const seatNum = parseInt(e.target.getAttribute('data-seat'));
+            const index = selectedSeats.indexOf(seatNum);
+            
+            if (index === -1) {
+                selectedSeats.push(seatNum);
+                e.target.classList.add('selected');
+            } else {
+                selectedSeats.splice(index, 1);
+                e.target.classList.remove('selected');
+            }
+            
+            updateSelectionDisplay();
+        }
+
+        function updateSelectionDisplay() {
+            if (selectedSeats.length === 0) {
+                selectedSeatsDisplay.textContent = 'None';
+            } else {
+                selectedSeatsDisplay.textContent = selectedSeats.join(', ');
+            }
+            
+            totalPrice.textContent = selectedSeats.length * selectedBus.price;
+        }
+
+        // Close modal
+        function closeBookingModal() {
+            bookingModal.style.display = 'none';
+        }
+
+        closeModal.addEventListener('click', closeBookingModal);
+        cancelBooking.addEventListener('click', closeBookingModal);
+
+        // Confirm booking
+        confirmBooking.addEventListener('click', async () => {
+            if (selectedSeats.length === 0) {
+                alert('Please select at least one seat.');
+                return;
+            }
+            
+            try {
+                // In a real app, this would be an API call to your backend
+                // For demo purposes, we're simulating the booking process
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Generate a booking ID
+                const bookingId = 'SW' + Date.now().toString().slice(-6);
+                
+                // Save booking to localStorage (in a real app, this would be saved to a database)
+                const booking = {
+                    id: bookingId,
+                    bus: selectedBus,
+                    seats: selectedSeats,
+                    totalPrice: selectedSeats.length * selectedBus.price,
+                    date: new Date().toISOString(),
+                    status: 'confirmed'
+                };
+                
+                // Get existing bookings or initialize empty array
+                const existingBookings = JSON.parse(localStorage.getItem('swiftRideBookings') || '[]');
+                existingBookings.push(booking);
+                localStorage.setItem('swiftRideBookings', JSON.stringify(existingBookings));
+                
+                alert(`Booking confirmed! Your booking ID is ${bookingId}. Total: ₹${selectedSeats.length * selectedBus.price}`);
+                closeBookingModal();
+                
+                // In a real app, you would send this data to your backend
+                console.log('Booking details:', booking);
+            } catch (error) {
+                alert('There was an error processing your booking. Please try again.');
+                console.error('Booking error:', error);
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === bookingModal) {
+                closeBookingModal();
+            }
+        });
+
+        // Load user bookings
+        function loadUserBookings() {
+            if (!currentUser) {
+                document.getElementById('bookingsList').innerHTML = '<p>Please login to view your bookings.</p>';
+                return;
+            }
+            
+            const bookingsList = document.getElementById('bookingsList');
+            const bookings = JSON.parse(localStorage.getItem('swiftRideBookings') || '[]');
+            
+            if (bookings.length === 0) {
+                bookingsList.innerHTML = '<p>You have no bookings yet.</p>';
+                return;
+            }
+            
+            bookingsList.innerHTML = '';
+            bookings.forEach(booking => {
+                const bookingCard = document.createElement('div');
+                bookingCard.className = 'booking-card';
+                bookingCard.innerHTML = `
+                    <div class="booking-header">
+                        <div class="booking-id">Booking ID: ${booking.id}</div>
+                        <div class="booking-status status-${booking.status}">${booking.status}</div>
+                    </div>
+                    <div class="booking-details">
+                        <div class="booking-route">
+                            <div class="booking-bus">${booking.bus.name}</div>
+                            <div class="booking-date">${new Date(booking.date).toLocaleDateString()}</div>
+                        </div>
+                        <div class="booking-route">
+                            <div>${booking.bus.from} to ${booking.bus.to}</div>
+                            <div>${booking.bus.departure} - ${booking.bus.arrival}</div>
+                        </div>
+                        <div class="booking-seats">
+                            <div>Seats: ${booking.seats.join(', ')}</div>
+                            <div class="booking-price">₹${booking.totalPrice}</div>
+                        </div>
+                        <div class="booking-actions">
+                            <button class="action-btn view-ticket-btn">View Ticket</button>
+                            <button class="action-btn cancel-booking-btn">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                bookingsList.appendChild(bookingCard);
+            });
+        }
+
+        // Load popular routes
+        function loadPopularRoutes() {
+            const routesList = document.getElementById('routesList');
+            
+            // Display some sample popular routes with Indian cities
+            const popularRoutes = [
+                { from: 'Delhi', to: 'Jaipur', price: 1200, duration: '6h', distance: '280 km' },
+                { from: 'Mumbai', to: 'Pune', price: 800, duration: '3h', distance: '150 km' },
+                { from: 'Bangalore', to: 'Chennai', price: 1000, duration: '6h', distance: '350 km' },
+                { from: 'Kolkata', to: 'Patna', price: 1500, duration: '12h', distance: '550 km' },
+                { from: 'Hyderabad', to: 'Bangalore', price: 1200, duration: '10h', distance: '570 km' },
+                { from: 'Ahmedabad', to: 'Mumbai', price: 900, duration: '8h', distance: '530 km' }
+            ];
+            
+            routesList.innerHTML = '';
+            popularRoutes.forEach(route => {
+                const routeCard = document.createElement('div');
+                routeCard.className = 'bus-card';
+                routeCard.innerHTML = `
+                    <div class="bus-card-header">
+                        <h3 class="bus-name">${route.from} to ${route.to}</h3>
+                        <span class="bus-type">Popular Route</span>
+                    </div>
+                    <div class="bus-card-body">
+                        <div class="bus-timings">
+                            <div class="timing">
+                                <div class="timing-place">${route.from}</div>
+                            </div>
+                            <div class="bus-separator">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <div class="timing">
+                                <div class="timing-place">${route.to}</div>
+                            </div>
+                        </div>
+                        <div class="distance-info">
+                            <div class="distance-item">
+                                <div class="distance-value">${route.distance}</div>
+                                <div class="distance-label">Distance</div>
+                            </div>
+                            <div class="distance-item">
+                                <div class="distance-value">${route.duration}</div>
+                                <div class="distance-label">Duration</div>
+                            </div>
+                        </div>
+                        <div class="bus-price">
+                            <div>
+                                <span class="price-amount">From ₹${route.price}</span>
+                                <span>per seat</span>
+                            </div>
+                            <button class="book-btn">View Buses</button>
+                        </div>
+                    </div>
+                `;
+                routesList.appendChild(routeCard);
+            });
+        }
+
+        // Contact form submission
+        const contactForm = document.getElementById('contactForm');
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            try {
+                // In a real app, this would send the message to your backend
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                alert('Thank you for your message! We will get back to you soon.');
+                contactForm.reset();
+            } catch (error) {
+                alert('There was an error sending your message. Please try again.');
+            }
+        });
+
+        // Initialize the application
+        function init() {
+            checkAuthStatus();
+            displayBuses(buses);
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>

@@ -1,10 +1,15 @@
+// API Base URL - adjust if your folder name is different
+const API_BASE_URL = window.location.origin + '/internship/api';
+
 // Mobile Menu Toggle
 const mobileMenuBtn = document.getElementById('mobileMenuBtn');
 const navLinks = document.getElementById('navLinks');
 
-mobileMenuBtn.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-});
+if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
+}
 
 // Page Navigation
 const navLinksElements = document.querySelectorAll('.nav-link');
@@ -21,10 +26,15 @@ navLinksElements.forEach(link => {
         
         // Show selected page
         pages.forEach(page => page.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.add('active');
+        }
         
         // Close mobile menu
-        navLinks.classList.remove('active');
+        if (navLinks) {
+            navLinks.classList.remove('active');
+        }
         
         // Load page-specific content
         if (pageId === 'bookingsPage') {
@@ -42,26 +52,43 @@ let currentUser = null;
 function checkAuthStatus() {
     const userData = localStorage.getItem('swiftRideUser');
     if (userData) {
-        currentUser = JSON.parse(userData);
-        updateUIForLoggedInUser();
+        try {
+            currentUser = JSON.parse(userData);
+            updateUIForLoggedInUser();
+        } catch (error) {
+            console.error('Error parsing user data:', error);
+            localStorage.removeItem('swiftRideUser');
+        }
     }
 }
 
 // Update UI for logged in user
 function updateUIForLoggedInUser() {
-    document.getElementById('authButtons').style.display = 'none';
-    document.getElementById('userMenu').style.display = 'flex';
-    document.getElementById('userName').textContent = currentUser.name;
-    document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (authButtons) authButtons.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'flex';
+    if (userName && currentUser) {
+        userName.textContent = currentUser.full_name || currentUser.username || 'User';
+    }
+    if (userAvatar && currentUser) {
+        userAvatar.textContent = (currentUser.full_name || currentUser.username || 'U').charAt(0).toUpperCase();
+    }
 }
 
 // Update UI for logged out user
 function updateUIForLoggedOutUser() {
-    document.getElementById('authButtons').style.display = 'flex';
-    document.getElementById('userMenu').style.display = 'none';
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    
+    if (authButtons) authButtons.style.display = 'flex';
+    if (userMenu) userMenu.style.display = 'none';
 }
 
-// Auth Modal
+// Auth Modal elements
 const authModal = document.getElementById('authModal');
 const loginBtn = document.getElementById('loginBtn');
 const signupBtn = document.getElementById('signupBtn');
@@ -72,377 +99,430 @@ const signupForm = document.getElementById('signupForm');
 const logoutBtn = document.getElementById('logoutBtn');
 
 // Show auth modal
-loginBtn.addEventListener('click', () => {
-    authModal.style.display = 'flex';
-    loginTab.click();
-});
+if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+        if (authModal) {
+            authModal.style.display = 'flex';
+            if (loginTab) loginTab.click();
+        }
+    });
+}
 
-signupBtn.addEventListener('click', () => {
-    authModal.style.display = 'flex';
-    signupTab.click();
-});
+if (signupBtn) {
+    signupBtn.addEventListener('click', () => {
+        if (authModal) {
+            authModal.style.display = 'flex';
+            if (signupTab) signupTab.click();
+        }
+    });
+}
 
 // Switch between login and signup tabs
-loginTab.addEventListener('click', () => {
-    loginTab.classList.add('active');
-    signupTab.classList.remove('active');
-    loginForm.style.display = 'flex';
-    signupForm.style.display = 'none';
-});
+if (loginTab && signupTab) {
+    loginTab.addEventListener('click', () => {
+        loginTab.classList.add('active');
+        signupTab.classList.remove('active');
+        if (loginForm) loginForm.style.display = 'flex';
+        if (signupForm) signupForm.style.display = 'none';
+    });
 
-signupTab.addEventListener('click', () => {
-    signupTab.classList.add('active');
-    loginTab.classList.remove('active');
-    signupForm.style.display = 'flex';
-    loginForm.style.display = 'none';
-});
+    signupTab.addEventListener('click', () => {
+        signupTab.classList.add('active');
+        loginTab.classList.remove('active');
+        if (signupForm) signupForm.style.display = 'flex';
+        if (loginForm) loginForm.style.display = 'none';
+    });
+}
 
 // Close auth modal when clicking outside
 window.addEventListener('click', (e) => {
-    if (e.target === authModal) {
+    if (authModal && e.target === authModal) {
         authModal.style.display = 'none';
     }
 });
+
+// API Functions
+async function loginUser(email, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'login',
+                email: email,
+                password: password
+            })
+        });
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Login error:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+async function registerUser(userData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'signup',
+                username: userData.username,
+                email: userData.email,
+                password: userData.password,
+                full_name: userData.name,
+                phone: userData.phone || ''
+            })
+        });
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Signup error:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+async function searchBuses(from, to, date) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/search.php?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${encodeURIComponent(date)}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        console.error('Search error:', error);
+        return [];
+    }
+}
+
+async function createBooking(bookingData) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/bookings.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(bookingData)
+        });
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Booking error:', error);
+        return { success: false, message: 'Network error' };
+    }
+}
+
+async function getBookedSeats(busId, journeyDate) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/seats.php?bus_id=${busId}&journey_date=${journeyDate}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.booked_seats;
+        }
+        return [];
+    } catch (error) {
+        console.error('Seats error:', error);
+        return [];
+    }
+}
+
+async function getUserBookings(userId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/bookings.php?user_id=${userId}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.data;
+        }
+        return [];
+    } catch (error) {
+        console.error('Bookings error:', error);
+        return [];
+    }
+}
 
 // Login form submission
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorElement = document.getElementById('loginError');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail');
+        const password = document.getElementById('loginPassword');
+        const errorElement = document.getElementById('loginError');
 
-    try {
-        if (!email || !password) {
-            throw new Error('Please fill in all fields');
-        }
+        if (!email || !password || !errorElement) return;
 
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Check if user exists in localStorage
-        const users = JSON.parse(localStorage.getItem('swiftRideUsers') || '[]');
-        const user = users.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-            // Mock user data
-            currentUser = {
-                id: user.id,
-                name: user.name,
-                email: user.email
-            };
+        try {
+            if (!email.value || !password.value) {
+                throw new Error('Please fill in all fields');
+            }
+
+            const result = await loginUser(email.value, password.value);
             
-            // Save to localStorage
-            localStorage.setItem('swiftRideUser', JSON.stringify(currentUser));
-            
-            // Update UI
-            updateUIForLoggedInUser();
-            
-            // Close modal
-            authModal.style.display = 'none';
-            
-            // Clear form
-            loginForm.reset();
-            errorElement.style.display = 'none';
-            
-            // Show success message
-            alert('Login successful!');
-        } else {
-            throw new Error('Invalid email or password');
+            if (result.success) {
+                currentUser = result.user;
+                
+                // Save to localStorage
+                localStorage.setItem('swiftRideUser', JSON.stringify(currentUser));
+                
+                // Update UI
+                updateUIForLoggedInUser();
+                
+                // Close modal
+                if (authModal) authModal.style.display = 'none';
+                
+                // Clear form
+                loginForm.reset();
+                errorElement.style.display = 'none';
+                
+                // Show success message
+                alert('Login successful!');
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            errorElement.textContent = error.message;
+            errorElement.style.display = 'block';
         }
-    } catch (error) {
-        errorElement.textContent = error.message;
-        errorElement.style.display = 'block';
-    }
-});
+    });
+}
 
 // Signup form submission
-signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('signupName').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
-    const confirmPassword = document.getElementById('signupConfirmPassword').value;
-    const errorElement = document.getElementById('signupError');
+if (signupForm) {
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('signupName');
+        const email = document.getElementById('signupEmail');
+        const password = document.getElementById('signupPassword');
+        const confirmPassword = document.getElementById('signupConfirmPassword');
+        const errorElement = document.getElementById('signupError');
 
-    try {
-        if (!name || !email || !password || !confirmPassword) {
-            throw new Error('Please fill in all fields');
-        }
+        if (!name || !email || !password || !confirmPassword || !errorElement) return;
 
-        if (password !== confirmPassword) {
-            throw new Error('Passwords do not match');
-        }
+        try {
+            if (!name.value || !email.value || !password.value || !confirmPassword.value) {
+                throw new Error('Please fill in all fields');
+            }
 
-        if (password.length < 6) {
-            throw new Error('Password must be at least 6 characters');
-        }
+            if (password.value !== confirmPassword.value) {
+                throw new Error('Passwords do not match');
+            }
 
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Check if user already exists
-        const users = JSON.parse(localStorage.getItem('swiftRideUsers') || '[]');
-        const existingUser = users.find(u => u.email === email);
-        
-        if (existingUser) {
-            throw new Error('User with this email already exists');
+            if (password.value.length < 6) {
+                throw new Error('Password must be at least 6 characters');
+            }
+
+            const result = await registerUser({
+                username: email.value.split('@')[0],
+                email: email.value,
+                password: password.value,
+                name: name.value
+            });
+            
+            if (result.success) {
+                currentUser = result.user;
+                
+                // Save to localStorage
+                localStorage.setItem('swiftRideUser', JSON.stringify(currentUser));
+                
+                // Update UI
+                updateUIForLoggedInUser();
+                
+                // Close modal
+                if (authModal) authModal.style.display = 'none';
+                
+                // Clear form
+                signupForm.reset();
+                errorElement.style.display = 'none';
+                
+                // Show success message
+                alert('Account created successfully!');
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            errorElement.textContent = error.message;
+            errorElement.style.display = 'block';
         }
-        
-        // Create new user
-        const newUser = {
-            id: Date.now(),
-            name: name,
-            email: email,
-            password: password
-        };
-        
-        users.push(newUser);
-        localStorage.setItem('swiftRideUsers', JSON.stringify(users));
-        
-        // Mock user data
-        currentUser = {
-            id: newUser.id,
-            name: newUser.name,
-            email: newUser.email
-        };
-        
-        // Save to localStorage
-        localStorage.setItem('swiftRideUser', JSON.stringify(currentUser));
-        
-        // Update UI
-        updateUIForLoggedInUser();
-        
-        // Close modal
-        authModal.style.display = 'none';
-        
-        // Clear form
-        signupForm.reset();
-        errorElement.style.display = 'none';
-        
-        // Show success message
-        alert('Account created successfully!');
-    } catch (error) {
-        errorElement.textContent = error.message;
-        errorElement.style.display = 'block';
-    }
-});
+    });
+}
 
 // Logout
-logoutBtn.addEventListener('click', () => {
-    currentUser = null;
-    localStorage.removeItem('swiftRideUser');
-    updateUIForLoggedOutUser();
-    alert('You have been logged out.');
-});
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        currentUser = null;
+        localStorage.removeItem('swiftRideUser');
+        updateUIForLoggedOutUser();
+        alert('You have been logged out.');
+    });
+}
 
 // Journey Type Toggle
 const oneWayBtn = document.getElementById('oneWayBtn');
 const roundTripBtn = document.getElementById('roundTripBtn');
 const returnDateGroup = document.getElementById('returnDateGroup');
 
-oneWayBtn.addEventListener('click', () => {
-    oneWayBtn.classList.add('active');
-    roundTripBtn.classList.remove('active');
-    returnDateGroup.classList.remove('active');
-});
+if (oneWayBtn && roundTripBtn && returnDateGroup) {
+    oneWayBtn.addEventListener('click', () => {
+        oneWayBtn.classList.add('active');
+        roundTripBtn.classList.remove('active');
+        returnDateGroup.classList.remove('active');
+    });
 
-roundTripBtn.addEventListener('click', () => {
-    roundTripBtn.classList.add('active');
-    oneWayBtn.classList.remove('active');
-    returnDateGroup.classList.add('active');
-});
-
-// Sample Bus Data with Indian Cities and Rupee Prices
-const buses = [
-    {
-        id: 1,
-        name: "Swift Deluxe",
-        type: "AC Sleeper",
-        departure: "08:00 AM",
-        arrival: "02:00 PM",
-        from: "Delhi",
-        to: "Jaipur",
-        distance: "280 km",
-        duration: "6 hours",
-        amenities: ["wifi", "charging", "blanket", "water"],
-        price: 1200,
-        seats: 36,
-        bookedSeats: [4, 5, 12, 13, 20, 21],
-        busType: "sleeper",
-        departureTime: "morning"
-    },
-    {
-        id: 2,
-        name: "City Express",
-        type: "AC Semi-Sleeper",
-        departure: "10:30 AM",
-        arrival: "05:30 PM",
-        from: "Mumbai",
-        to: "Pune",
-        distance: "150 km",
-        duration: "7 hours",
-        amenities: ["wifi", "charging", "water"],
-        price: 800,
-        seats: 40,
-        bookedSeats: [1, 2, 15, 16, 25, 26, 35, 36],
-        busType: "semi-sleeper",
-        departureTime: "morning"
-    },
-    {
-        id: 3,
-        name: "Premium Travels",
-        type: "Non-AC Seater",
-        departure: "07:00 AM",
-        arrival: "12:00 PM",
-        from: "Bangalore",
-        to: "Chennai",
-        distance: "350 km",
-        duration: "5 hours",
-        amenities: ["charging", "water"],
-        price: 600,
-        seats: 42,
-        bookedSeats: [3, 4, 10, 11, 20, 21, 30, 31, 40, 41],
-        busType: "seater",
-        departureTime: "morning"
-    },
-    {
-        id: 4,
-        name: "Luxury Line",
-        type: "AC Sleeper",
-        departure: "11:00 PM",
-        arrival: "07:00 AM",
-        from: "Kolkata",
-        to: "Patna",
-        distance: "550 km",
-        duration: "8 hours",
-        amenities: ["wifi", "charging", "blanket", "water", "snacks"],
-        price: 1500,
-        seats: 32,
-        bookedSeats: [5, 6, 12, 13, 20, 21, 28, 29],
-        busType: "luxury",
-        departureTime: "night"
-    },
-    {
-        id: 5,
-        name: "Express Connect",
-        type: "AC Semi-Sleeper",
-        departure: "02:00 PM",
-        arrival: "08:00 PM",
-        from: "Hyderabad",
-        to: "Bangalore",
-        distance: "570 km",
-        duration: "6 hours",
-        amenities: ["wifi", "charging", "water"],
-        price: 1100,
-        seats: 38,
-        bookedSeats: [7, 8, 15, 16, 25, 26],
-        busType: "semi-sleeper",
-        departureTime: "afternoon"
-    },
-    {
-        id: 6,
-        name: "Comfort Ride",
-        type: "Non-AC Seater",
-        departure: "06:00 PM",
-        arrival: "11:00 PM",
-        from: "Ahmedabad",
-        to: "Mumbai",
-        distance: "530 km",
-        duration: "5 hours",
-        amenities: ["charging", "water"],
-        price: 700,
-        seats: 44,
-        bookedSeats: [10, 11, 20, 21, 30, 31, 40, 41],
-        busType: "seater",
-        departureTime: "evening"
-    }
-];
+    roundTripBtn.addEventListener('click', () => {
+        roundTripBtn.classList.add('active');
+        oneWayBtn.classList.remove('active');
+        returnDateGroup.classList.add('active');
+    });
+}
 
 // Search Form Submission
 const searchForm = document.getElementById('searchForm');
 const busList = document.getElementById('busList');
 const filterSection = document.getElementById('filterSection');
 
-searchForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const from = document.getElementById('from').value;
-    const to = document.getElementById('to').value;
-    const date = document.getElementById('date').value;
-    const passengers = document.getElementById('passengers').value;
-    const isRoundTrip = roundTripBtn.classList.contains('active');
-    const returnDate = document.getElementById('returnDate').value;
+if (searchForm) {
+    searchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const from = document.getElementById('from');
+        const to = document.getElementById('to');
+        const date = document.getElementById('date');
+        
+        if (!from || !to || !date) return;
+        
+        const fromValue = from.value;
+        const toValue = to.value;
+        const dateValue = date.value;
+        const passengers = document.getElementById('passengers');
+        const passengersValue = passengers ? passengers.value : '1';
+        const isRoundTrip = roundTripBtn ? roundTripBtn.classList.contains('active') : false;
+        const returnDate = document.getElementById('returnDate');
 
-    // Show filter section
-    filterSection.style.display = 'block';
+        // Show filter section
+        if (filterSection) {
+            filterSection.style.display = 'block';
+        }
 
-    // In a real app, you would fetch buses based on search criteria
-    // Here we'll filter buses based on from and to
-    let filteredBuses = buses;
-    if (from && to) {
-        filteredBuses = buses.filter(bus => 
-            bus.from.toLowerCase().includes(from.toLowerCase()) && 
-            bus.to.toLowerCase().includes(to.toLowerCase())
-        );
-    }
-    
-    displayBuses(filteredBuses, isRoundTrip);
-});
+        // Show loading
+        if (busList) {
+            busList.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 2rem;">Loading buses...</p>';
+        }
+
+        // Fetch buses from API
+        const buses = await searchBuses(fromValue, toValue, dateValue);
+        
+        if (busList) {
+            if (buses.length === 0) {
+                busList.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 2rem;">No buses found for this route.</p>';
+                return;
+            }
+            
+            // Get booked seats for each bus
+            const busesWithSeats = [];
+            for (let bus of buses) {
+                const bookedSeats = await getBookedSeats(bus.bus_id, dateValue);
+                bus.bookedSeats = bookedSeats.map(seat => parseInt(seat));
+                busesWithSeats.push(bus);
+            }
+            
+            displayBuses(busesWithSeats, isRoundTrip);
+        }
+    });
+}
 
 // Filter functionality
 const applyFiltersBtn = document.getElementById('applyFilters');
 const resetFiltersBtn = document.getElementById('resetFilters');
 
-applyFiltersBtn.addEventListener('click', () => {
-    applyFilters();
-});
+if (applyFiltersBtn) {
+    applyFiltersBtn.addEventListener('click', applyFilters);
+}
 
-resetFiltersBtn.addEventListener('click', () => {
-    resetFilters();
-});
+if (resetFiltersBtn) {
+    resetFiltersBtn.addEventListener('click', resetFilters);
+}
 
 function applyFilters() {
-    const busType = document.getElementById('busType').value;
-    const departureTime = document.getElementById('departureTime').value;
-    const priceRange = document.getElementById('priceRange').value;
-    const isRoundTrip = roundTripBtn.classList.contains('active');
+    const busType = document.getElementById('busType');
+    const departureTime = document.getElementById('departureTime');
+    const priceRange = document.getElementById('priceRange');
+    
+    if (!busType || !departureTime || !priceRange || !busList) return;
+    
+    const busTypeValue = busType.value;
+    const departureTimeValue = departureTime.value;
+    const priceRangeValue = priceRange.value;
 
-    let filteredBuses = buses;
+    // Get current displayed buses
+    const busCards = busList.querySelectorAll('.bus-card');
+    let filteredCount = 0;
 
-    // Filter by bus type
-    if (busType !== 'all') {
-        filteredBuses = filteredBuses.filter(bus => bus.busType === busType);
-    }
-
-    // Filter by departure time
-    if (departureTime !== 'all') {
-        filteredBuses = filteredBuses.filter(bus => bus.departureTime === departureTime);
-    }
-
-    // Filter by price range
-    if (priceRange !== 'all') {
-        if (priceRange === 'budget') {
-            filteredBuses = filteredBuses.filter(bus => bus.price <= 800);
-        } else if (priceRange === 'medium') {
-            filteredBuses = filteredBuses.filter(bus => bus.price > 800 && bus.price <= 1500);
-        } else if (priceRange === 'premium') {
-            filteredBuses = filteredBuses.filter(bus => bus.price > 1500);
+    busCards.forEach(card => {
+        let show = true;
+        
+        // Filter by bus type
+        if (busTypeValue !== 'all') {
+            const busTypeElement = card.querySelector('.bus-type');
+            if (busTypeElement) {
+                const type = busTypeElement.textContent.toLowerCase();
+                if (!type.includes(busTypeValue)) {
+                    show = false;
+                }
+            }
         }
-    }
+        
+        // Filter by price range
+        if (priceRangeValue !== 'all') {
+            const priceElement = card.querySelector('.price-amount');
+            if (priceElement) {
+                const price = parseInt(priceElement.textContent.replace('₹', ''));
+                if (priceRangeValue === 'budget' && price > 800) show = false;
+                if (priceRangeValue === 'medium' && (price <= 800 || price > 1500)) show = false;
+                if (priceRangeValue === 'premium' && price <= 1500) show = false;
+            }
+        }
+        
+        card.style.display = show ? 'block' : 'none';
+        if (show) filteredCount++;
+    });
 
-    displayBuses(filteredBuses, isRoundTrip);
+    if (filteredCount === 0) {
+        busList.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 2rem;">No buses found with current filters.</p>';
+    }
 }
 
 function resetFilters() {
-    document.getElementById('busType').value = 'all';
-    document.getElementById('departureTime').value = 'all';
-    document.getElementById('priceRange').value = 'all';
+    const busType = document.getElementById('busType');
+    const departureTime = document.getElementById('departureTime');
+    const priceRange = document.getElementById('priceRange');
     
-    // Display all buses
-    displayBuses(buses, roundTripBtn.classList.contains('active'));
+    if (busType) busType.value = 'all';
+    if (departureTime) departureTime.value = 'all';
+    if (priceRange) priceRange.value = 'all';
+    
+    // Show all bus cards
+    if (busList) {
+        const busCards = busList.querySelectorAll('.bus-card');
+        busCards.forEach(card => {
+            card.style.display = 'block';
+        });
+    }
 }
 
 // Display Buses
 function displayBuses(buses, isRoundTrip = false) {
+    if (!busList) return;
+    
     busList.innerHTML = '';
     
     if (buses.length === 0) {
@@ -453,34 +533,41 @@ function displayBuses(buses, isRoundTrip = false) {
     buses.forEach(bus => {
         const busCard = document.createElement('div');
         busCard.className = 'bus-card';
+        
+        // Format time
+        const departureTime = formatTime(bus.departure_time);
+        const arrivalTime = formatTime(bus.arrival_time);
+        
+        // Determine bus type display
+        let busTypeDisplay = 'AC Sleeper';
+        if (bus.bus_type === 'semi-sleeper') busTypeDisplay = 'AC Semi-Sleeper';
+        if (bus.bus_type === 'seater') busTypeDisplay = 'Non-AC Seater';
+        if (bus.bus_type === 'luxury') busTypeDisplay = 'Luxury Bus';
+        
         busCard.innerHTML = `
             <div class="bus-card-header">
-                <h3 class="bus-name">${bus.name}</h3>
-                <span class="bus-type ${bus.busType === 'sleeper' ? 'type-sleeper' : bus.busType === 'semi-sleeper' ? 'type-semi-sleeper' : bus.busType === 'seater' ? 'type-seater' : 'type-luxury'}">${bus.type}</span>
+                <h3 class="bus-name">${bus.bus_name || 'Bus'}</h3>
+                <span class="bus-type ${bus.bus_type === 'sleeper' ? 'type-sleeper' : bus.bus_type === 'semi-sleeper' ? 'type-semi-sleeper' : bus.bus_type === 'seater' ? 'type-seater' : 'type-luxury'}">${busTypeDisplay}</span>
             </div>
             <div class="bus-card-body">
                 <div class="bus-info">
                     <div class="bus-info-item">
-                        <i class="fas fa-wifi ${bus.amenities.includes('wifi') ? '' : 'disabled'}"></i>
+                        <i class="fas fa-wifi"></i>
                         <span>WiFi</span>
                     </div>
                     <div class="bus-info-item">
-                        <i class="fas fa-bolt ${bus.amenities.includes('charging') ? '' : 'disabled'}"></i>
+                        <i class="fas fa-bolt"></i>
                         <span>Charging</span>
                     </div>
                     <div class="bus-info-item">
-                        <i class="fas fa-utensils ${bus.amenities.includes('snacks') ? '' : 'disabled'}"></i>
-                        <span>Snacks</span>
-                    </div>
-                    <div class="bus-info-item">
-                        <i class="fas fa-blanket ${bus.amenities.includes('blanket') ? '' : 'disabled'}"></i>
+                        <i class="fas fa-blanket"></i>
                         <span>Blanket</span>
                     </div>
                 </div>
                 <div class="bus-timings">
                     <div class="timing">
-                        <div class="timing-time">${bus.departure}</div>
-                        <div class="timing-place">${bus.from}</div>
+                        <div class="timing-time">${departureTime}</div>
+                        <div class="timing-place">${bus.source || 'City'}</div>
                     </div>
                     <div class="bus-separator">
                         <i class="fas fa-circle"></i>
@@ -488,30 +575,26 @@ function displayBuses(buses, isRoundTrip = false) {
                         <i class="fas fa-circle"></i>
                     </div>
                     <div class="timing">
-                        <div class="timing-time">${bus.arrival}</div>
-                        <div class="timing-place">${bus.to}</div>
+                        <div class="timing-time">${arrivalTime}</div>
+                        <div class="timing-place">${bus.destination || 'City'}</div>
                     </div>
                 </div>
                 <div class="distance-info">
                     <div class="distance-item">
-                        <div class="distance-value">${bus.distance}</div>
-                        <div class="distance-label">Distance</div>
+                        <div class="distance-value">${bus.total_seats || 40} Seats</div>
+                        <div class="distance-label">Capacity</div>
                     </div>
                     <div class="distance-item">
-                        <div class="distance-value">${bus.duration}</div>
-                        <div class="distance-label">Duration</div>
-                    </div>
-                    <div class="distance-item">
-                        <div class="distance-value">${bus.seats - bus.bookedSeats.length}</div>
-                        <div class="distance-label">Seats Available</div>
+                        <div class="distance-value">${bus.available_seats || bus.total_seats || 40} Available</div>
+                        <div class="distance-label">Seats Left</div>
                     </div>
                 </div>
                 <div class="bus-price">
                     <div>
-                        <span class="price-amount">₹${bus.price}</span>
+                        <span class="price-amount">₹${bus.fare || 0}</span>
                         <span>per seat</span>
                     </div>
-                    <button class="book-btn" data-id="${bus.id}" data-roundtrip="${isRoundTrip}">Book Now</button>
+                    <button class="book-btn" data-id="${bus.bus_id || 0}" data-roundtrip="${isRoundTrip}">Book Now</button>
                 </div>
             </div>
         `;
@@ -523,50 +606,77 @@ function displayBuses(buses, isRoundTrip = false) {
         btn.addEventListener('click', (e) => {
             if (!currentUser) {
                 alert('Please login to book a bus.');
-                loginBtn.click();
+                if (loginBtn) loginBtn.click();
                 return;
             }
             
             const busId = parseInt(e.target.getAttribute('data-id'));
             const isRoundTrip = e.target.getAttribute('data-roundtrip') === 'true';
-            const bus = buses.find(b => b.id === busId);
-            openBookingModal(bus, isRoundTrip);
+            const bus = buses.find(b => b.bus_id === busId);
+            if (bus) {
+                openBookingModal(bus, isRoundTrip);
+            }
         });
     });
 }
 
-// Booking Modal
+// Helper function to format time
+function formatTime(timeString) {
+    if (!timeString) return 'N/A';
+    try {
+        const time = new Date(`2000-01-01T${timeString}`);
+        return time.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+        });
+    } catch (error) {
+        console.error('Error formatting time:', error);
+        return timeString;
+    }
+}
+
+// Booking Modal elements
 const bookingModal = document.getElementById('bookingModal');
 const closeModal = document.getElementById('closeModal');
-const cancelBooking = document.getElementById('cancelBooking');
+const cancelBookingBtn = document.getElementById('cancelBooking');
 const modalBusName = document.getElementById('modalBusName');
 const modalBusTiming = document.getElementById('modalBusTiming');
 const seatSelection = document.getElementById('seatSelection');
 const selectedSeatsDisplay = document.getElementById('selectedSeatsDisplay');
 const totalPrice = document.getElementById('totalPrice');
-const confirmBooking = document.getElementById('confirmBooking');
+const confirmBookingBtn = document.getElementById('confirmBooking');
 
 let selectedBus = null;
 let selectedSeats = [];
 let isRoundTripBooking = false;
 
-function openBookingModal(bus, isRoundTrip = false) {
+async function openBookingModal(bus, isRoundTrip = false) {
+    if (!bookingModal || !modalBusName || !modalBusTiming || !seatSelection) return;
+    
     selectedBus = bus;
     selectedSeats = [];
     isRoundTripBooking = isRoundTrip;
     
-    modalBusName.textContent = `${bus.name} (${bus.type})`;
-    modalBusTiming.textContent = `${bus.from} to ${bus.to} | ${bus.departure} - ${bus.arrival}`;
+    modalBusName.textContent = `${bus.bus_name || 'Bus'}`;
+    modalBusTiming.textContent = `${bus.source || 'City'} to ${bus.destination || 'City'} | ${formatTime(bus.departure_time)} - ${formatTime(bus.arrival_time)}`;
+    
+    // Get booked seats for this bus
+    const journeyDate = document.getElementById('date');
+    const journeyDateValue = journeyDate ? journeyDate.value : new Date().toISOString().split('T')[0];
+    const bookedSeats = await getBookedSeats(bus.bus_id, journeyDateValue);
     
     // Generate seats
     seatSelection.innerHTML = '';
-    for (let i = 1; i <= bus.seats; i++) {
+    const totalSeats = bus.total_seats || 40;
+    
+    for (let i = 1; i <= totalSeats; i++) {
         const seat = document.createElement('div');
-        seat.className = `seat ${bus.bookedSeats.includes(i) ? 'booked' : 'available'}`;
+        seat.className = `seat ${bookedSeats.includes(i.toString()) ? 'booked' : 'available'}`;
         seat.textContent = i;
         seat.setAttribute('data-seat', i);
         
-        if (!bus.bookedSeats.includes(i)) {
+        if (!bookedSeats.includes(i.toString())) {
             seat.addEventListener('click', toggleSeatSelection);
         }
         
@@ -593,211 +703,175 @@ function toggleSeatSelection(e) {
 }
 
 function updateSelectionDisplay() {
-    if (selectedSeats.length === 0) {
-        selectedSeatsDisplay.textContent = 'None';
-    } else {
-        selectedSeatsDisplay.textContent = selectedSeats.join(', ');
+    if (selectedSeatsDisplay && totalPrice && selectedBus) {
+        if (selectedSeats.length === 0) {
+            selectedSeatsDisplay.textContent = 'None';
+        } else {
+            selectedSeatsDisplay.textContent = selectedSeats.join(', ');
+        }
+        
+        const multiplier = isRoundTripBooking ? 2 : 1;
+        const price = selectedBus.fare || 0;
+        totalPrice.textContent = selectedSeats.length * price * multiplier;
     }
-    
-    const multiplier = isRoundTripBooking ? 2 : 1;
-    totalPrice.textContent = selectedSeats.length * selectedBus.price * multiplier;
 }
 
 // Close modal
 function closeBookingModal() {
-    bookingModal.style.display = 'none';
+    if (bookingModal) {
+        bookingModal.style.display = 'none';
+    }
 }
 
-closeModal.addEventListener('click', closeBookingModal);
-cancelBooking.addEventListener('click', closeBookingModal);
+// Event listeners for booking modal
+if (closeModal) {
+    closeModal.addEventListener('click', closeBookingModal);
+}
+
+if (cancelBookingBtn) {
+    cancelBookingBtn.addEventListener('click', closeBookingModal);
+}
 
 // Confirm booking
-confirmBooking.addEventListener('click', async () => {
-    if (selectedSeats.length === 0) {
-        alert('Please select at least one seat.');
-        return;
-    }
-    
-    try {
-        // Simulate booking process
-        await new Promise(resolve => setTimeout(resolve, 800));
+if (confirmBookingBtn) {
+    confirmBookingBtn.addEventListener('click', async () => {
+        if (selectedSeats.length === 0) {
+            alert('Please select at least one seat.');
+            return;
+        }
         
-        // Generate a booking ID
-        const bookingId = 'SW' + Date.now().toString().slice(-6);
+        if (!currentUser) {
+            alert('Please login to book a bus.');
+            if (loginBtn) loginBtn.click();
+            return;
+        }
         
-        // Calculate total price
-        const multiplier = isRoundTripBooking ? 2 : 1;
-        const totalPriceValue = selectedSeats.length * selectedBus.price * multiplier;
+        if (!selectedBus) return;
         
-        // Save booking to localStorage
-        const booking = {
-            id: bookingId,
-            bus: selectedBus,
-            seats: selectedSeats,
-            totalPrice: totalPriceValue,
-            date: new Date().toISOString(),
-            status: 'confirmed',
-            isRoundTrip: isRoundTripBooking
-        };
-        
-        // Get existing bookings or initialize empty array
-        const existingBookings = JSON.parse(localStorage.getItem('swiftRideBookings') || '[]');
-        existingBookings.push(booking);
-        localStorage.setItem('swiftRideBookings', JSON.stringify(existingBookings));
-        
-        alert(`Booking confirmed! Your booking ID is ${bookingId}. Total: ₹${totalPriceValue}`);
-        closeBookingModal();
-    } catch (error) {
-        alert('There was an error processing your booking. Please try again.');
-        console.error('Booking error:', error);
-    }
-});
+        try {
+            const journeyDate = document.getElementById('date');
+            const journeyDateValue = journeyDate ? journeyDate.value : new Date().toISOString().split('T')[0];
+            
+            const bookingData = {
+                user_id: currentUser.user_id || currentUser.id || 0,
+                bus_id: selectedBus.bus_id || 0,
+                seat_numbers: selectedSeats.join(', '),
+                journey_date: journeyDateValue,
+                total_passengers: selectedSeats.length,
+                total_amount: selectedSeats.length * (selectedBus.fare || 0)
+            };
+            
+            const result = await createBooking(bookingData);
+            
+            if (result.success) {
+                alert(`Booking confirmed! Your booking ID is ${result.booking_id}. Total: ₹${bookingData.total_amount}`);
+                closeBookingModal();
+                
+                // Reload user bookings
+                loadUserBookings();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+}
 
 // Close modal when clicking outside
 window.addEventListener('click', (e) => {
-    if (e.target === bookingModal) {
+    if (bookingModal && e.target === bookingModal) {
         closeBookingModal();
-    }
-});
-
-// Cancel Booking Modal
-const cancelBookingModal = document.getElementById('cancelBookingModal');
-const closeCancelModal = document.getElementById('closeCancelModal');
-const closeCancelBtn = document.getElementById('closeCancelBtn');
-const confirmCancel = document.getElementById('confirmCancel');
-const refundAmount = document.getElementById('refundAmount');
-
-let bookingToCancel = null;
-
-function openCancelBookingModal(booking) {
-    bookingToCancel = booking;
-    
-    // Calculate refund amount (80% of total price)
-    const refund = Math.floor(booking.totalPrice * 0.8);
-    refundAmount.textContent = `₹${refund}`;
-    
-    cancelBookingModal.style.display = 'flex';
-}
-
-function closeCancelBookingModal() {
-    cancelBookingModal.style.display = 'none';
-    bookingToCancel = null;
-}
-
-closeCancelModal.addEventListener('click', closeCancelBookingModal);
-closeCancelBtn.addEventListener('click', closeCancelBookingModal);
-
-// Confirm cancellation
-confirmCancel.addEventListener('click', () => {
-    if (!bookingToCancel) return;
-    
-    // Update booking status
-    const bookings = JSON.parse(localStorage.getItem('swiftRideBookings') || '[]');
-    const updatedBookings = bookings.map(booking => {
-        if (booking.id === bookingToCancel.id) {
-            return {
-                ...booking,
-                status: 'cancelled',
-                cancellationDate: new Date().toISOString(),
-                refundAmount: Math.floor(booking.totalPrice * 0.8)
-            };
-        }
-        return booking;
-    });
-    
-    localStorage.setItem('swiftRideBookings', JSON.stringify(updatedBookings));
-    
-    alert(`Booking ${bookingToCancel.id} has been cancelled. Refund of ₹${Math.floor(bookingToCancel.totalPrice * 0.8)} will be processed.`);
-    closeCancelBookingModal();
-    
-    // Reload bookings
-    loadUserBookings();
-});
-
-// Close cancel modal when clicking outside
-window.addEventListener('click', (e) => {
-    if (e.target === cancelBookingModal) {
-        closeCancelBookingModal();
     }
 });
 
 // Load user bookings
-function loadUserBookings() {
+async function loadUserBookings() {
     if (!currentUser) {
-        document.getElementById('bookingsList').innerHTML = '<p>Please login to view your bookings.</p>';
+        const bookingsList = document.getElementById('bookingsList');
+        if (bookingsList) {
+            bookingsList.innerHTML = '<p>Please login to view your bookings.</p>';
+        }
         return;
     }
     
     const bookingsList = document.getElementById('bookingsList');
-    const bookings = JSON.parse(localStorage.getItem('swiftRideBookings') || '[]');
+    if (!bookingsList) return;
     
-    if (bookings.length === 0) {
-        bookingsList.innerHTML = '<p>You have no bookings yet.</p>';
-        return;
-    }
-    
-    bookingsList.innerHTML = '';
-    bookings.forEach(booking => {
-        const bookingCard = document.createElement('div');
-        bookingCard.className = 'booking-card';
+    try {
+        const bookings = await getUserBookings(currentUser.user_id || currentUser.id);
         
-        // Determine status class
-        let statusClass = 'status-confirmed';
-        if (booking.status === 'cancelled') {
-            statusClass = 'status-cancelled';
-        } else if (booking.status === 'pending') {
-            statusClass = 'status-pending';
+        if (bookings.length === 0) {
+            bookingsList.innerHTML = '<p>You have no bookings yet.</p>';
+            return;
         }
         
-        bookingCard.innerHTML = `
-            <div class="booking-header">
-                <div class="booking-id">Booking ID: ${booking.id}</div>
-                <div class="booking-status ${statusClass}">${booking.status}</div>
-            </div>
-            <div class="booking-details">
-                <div class="booking-route">
-                    <div class="booking-bus">${booking.bus.name} ${booking.isRoundTrip ? '(Round Trip)' : ''}</div>
-                    <div class="booking-date">${new Date(booking.date).toLocaleDateString()}</div>
+        bookingsList.innerHTML = '';
+        bookings.forEach(booking => {
+            const bookingCard = document.createElement('div');
+            bookingCard.className = 'booking-card';
+            
+            // Determine status class
+            let statusClass = 'status-confirmed';
+            if (booking.status === 'cancelled') {
+                statusClass = 'status-cancelled';
+            } else if (booking.status === 'pending') {
+                statusClass = 'status-pending';
+            }
+            
+            bookingCard.innerHTML = `
+                <div class="booking-header">
+                    <div class="booking-id">Booking ID: ${booking.booking_id || 'N/A'}</div>
+                    <div class="booking-status ${statusClass}">${booking.status || 'confirmed'}</div>
                 </div>
-                <div class="booking-route">
-                    <div>${booking.bus.from} to ${booking.bus.to}</div>
-                    <div>${booking.bus.departure} - ${booking.bus.arrival}</div>
+                <div class="booking-details">
+                    <div class="booking-route">
+                        <div class="booking-bus">${booking.bus_name || 'Bus'} ${booking.isRoundTrip ? '(Round Trip)' : ''}</div>
+                        <div class="booking-date">${new Date(booking.booking_date || booking.date).toLocaleDateString()}</div>
+                    </div>
+                    <div class="booking-route">
+                        <div>${booking.source || 'City'} to ${booking.destination || 'City'}</div>
+                        <div>${formatTime(booking.departure_time)} - ${formatTime(booking.arrival_time)}</div>
+                    </div>
+                    <div class="booking-seats">
+                        <div>Seats: ${booking.seat_numbers || 'N/A'}</div>
+                        <div class="booking-price">₹${booking.total_amount || 0}</div>
+                    </div>
+                    <div class="booking-actions">
+                        <button class="action-btn view-ticket-btn">View Ticket</button>
+                        ${(booking.status === 'confirmed' || !booking.status) ? '<button class="action-btn cancel-booking-btn" data-id="' + (booking.booking_id || '') + '">Cancel</button>' : ''}
+                    </div>
                 </div>
-                <div class="booking-seats">
-                    <div>Seats: ${booking.seats.join(', ')}</div>
-                    <div class="booking-price">₹${booking.totalPrice}</div>
-                </div>
-                <div class="booking-actions">
-                    <button class="action-btn view-ticket-btn">View Ticket</button>
-                    ${booking.status === 'confirmed' ? '<button class="action-btn cancel-booking-btn" data-id="' + booking.id + '">Cancel</button>' : ''}
-                </div>
-            </div>
-        `;
-        bookingsList.appendChild(bookingCard);
-    });
-
-    // Add event listeners to cancel buttons
-    document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const bookingId = e.target.getAttribute('data-id');
-            const booking = bookings.find(b => b.id === bookingId);
-            openCancelBookingModal(booking);
+            `;
+            bookingsList.appendChild(bookingCard);
         });
-    });
+
+        // Add event listeners to cancel buttons
+        document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const bookingId = e.target.getAttribute('data-id');
+                alert(`Cancel functionality for booking ${bookingId} would be implemented here.`);
+            });
+        });
+    } catch (error) {
+        console.error('Error loading bookings:', error);
+        if (bookingsList) {
+            bookingsList.innerHTML = '<p>Error loading bookings. Please try again.</p>';
+        }
+    }
 }
 
 // Load popular routes
 function loadPopularRoutes() {
     const routesList = document.getElementById('routesList');
+    if (!routesList) return;
     
-    // Display some sample popular routes with Indian cities
+    // Display sample popular routes
     const popularRoutes = [
-        { from: 'Delhi', to: 'Jaipur', price: 1200, duration: '6h', distance: '280 km' },
-        { from: 'Mumbai', to: 'Pune', price: 800, duration: '3h', distance: '150 km' },
-        { from: 'Bangalore', to: 'Chennai', price: 1000, duration: '6h', distance: '350 km' },
-        { from: 'Kolkata', to: 'Patna', price: 1500, duration: '12h', distance: '550 km' },
-        { from: 'Hyderabad', to: 'Bangalore', price: 1200, duration: '10h', distance: '570 km' },
-        { from: 'Ahmedabad', to: 'Mumbai', price: 900, duration: '8h', distance: '530 km' }
+        { source: 'Delhi', destination: 'Jaipur', fare: 1200, duration: '6h', distance: '280 km' },
+        { source: 'Mumbai', destination: 'Pune', fare: 800, duration: '3h', distance: '150 km' },
+        { source: 'Bangalore', destination: 'Chennai', fare: 1000, duration: '6h', distance: '350 km' },
+        { source: 'Kolkata', destination: 'Patna', fare: 1500, duration: '12h', distance: '550 km' }
     ];
     
     routesList.innerHTML = '';
@@ -806,19 +880,19 @@ function loadPopularRoutes() {
         routeCard.className = 'bus-card';
         routeCard.innerHTML = `
             <div class="bus-card-header">
-                <h3 class="bus-name">${route.from} to ${route.to}</h3>
+                <h3 class="bus-name">${route.source} to ${route.destination}</h3>
                 <span class="bus-type">Popular Route</span>
             </div>
             <div class="bus-card-body">
                 <div class="bus-timings">
                     <div class="timing">
-                        <div class="timing-place">${route.from}</div>
+                        <div class="timing-place">${route.source}</div>
                     </div>
                     <div class="bus-separator">
                         <i class="fas fa-arrow-right"></i>
                     </div>
                     <div class="timing">
-                        <div class="timing-place">${route.to}</div>
+                        <div class="timing-place">${route.destination}</div>
                     </div>
                 </div>
                 <div class="distance-info">
@@ -833,7 +907,7 @@ function loadPopularRoutes() {
                 </div>
                 <div class="bus-price">
                     <div>
-                        <span class="price-amount">From ₹${route.price}</span>
+                        <span class="price-amount">From ₹${route.fare}</span>
                         <span>per seat</span>
                     </div>
                     <button class="book-btn">View Buses</button>
@@ -846,34 +920,60 @@ function loadPopularRoutes() {
 
 // Contact form submission
 const contactForm = document.getElementById('contactForm');
-contactForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const name = document.getElementById('contactName').value;
-    const email = document.getElementById('contactEmail').value;
-    const message = document.getElementById('contactMessage').value;
-    
-    try {
-        // Simulate sending message
-        await new Promise(resolve => setTimeout(resolve, 800));
+if (contactForm) {
+    contactForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        alert('Thank you for your message! We will get back to you soon.');
-        contactForm.reset();
-    } catch (error) {
-        alert('There was an error sending your message. Please try again.');
-    }
-});
+        const name = document.getElementById('contactName');
+        const email = document.getElementById('contactEmail');
+        const message = document.getElementById('contactMessage');
+        
+        if (!name || !email || !message) return;
+        
+        try {
+            // Simulate sending message
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            alert('Thank you for your message! We will get back to you soon.');
+            contactForm.reset();
+        } catch (error) {
+            alert('There was an error sending your message. Please try again.');
+        }
+    });
+}
 
 // Initialize the application
 function init() {
     checkAuthStatus();
-    displayBuses(buses);
     
     // Set minimum date for date inputs to today
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('date').min = today;
-    document.getElementById('returnDate').min = today;
+    const dateInput = document.getElementById('date');
+    const returnDateInput = document.getElementById('returnDate');
+    
+    if (dateInput) dateInput.min = today;
+    if (returnDateInput) returnDateInput.min = today;
+    
+    // Load initial buses
+    loadInitialBuses();
 }
 
-// Start the application
-init();
+async function loadInitialBuses() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/buses.php`);
+        const result = await response.json();
+        
+        if (result.success && busList) {
+            displayBuses(result.data);
+        }
+    } catch (error) {
+        console.error('Error loading initial buses:', error);
+        // Fallback to sample data if API fails
+        if (busList) {
+            busList.innerHTML = '<p style="text-align: center; grid-column: 1 / -1; padding: 2rem;">Unable to load buses. Please try again later.</p>';
+        }
+    }
+}
+
+// Start the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);

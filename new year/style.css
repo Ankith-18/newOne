@@ -1,0 +1,68 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+    color: white;
+}
+
+.container {
+    position: relative;
+    top: 120px;
+    background: rgba(0,0,0,0.35);
+    padding: 30px;
+    border-radius: 20px;
+    width: 420px;
+    margin: auto;
+    box-shadow: 0 0 25px rgba(255,255,255,0.4);
+}
+
+h1 {
+    animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 10px #fff; }
+    to { text-shadow: 0 0 25px #ffdde1; }
+}
+
+button {
+    margin-top: 15px;
+    padding: 12px 22px;
+    font-size: 16px;
+    background: #fff;
+    color: #ff416c;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: pink;
+}
+
+#wish {
+    margin-top: 15px;
+    font-size: 18px;
+    font-style: italic;
+}
+
+/* ❤️ Heart Animation */
+.hearts span {
+    position: absolute;
+    bottom: -50px;
+    font-size: 24px;
+    animation: floatUp 6s linear infinite;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-800px) scale(1.5);
+        opacity: 0;
+    }
+}
