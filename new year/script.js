@@ -17,7 +17,7 @@ setInterval(() => {
 // Love Wish
 function showWish() {
     document.getElementById("wish").innerHTML =
-        "❤️ Every year gives me 365 chances to love you more… but this year, I want to make it official. Happy New Year, my love Ankit❤️";
+        "❤️ Every year gives me 365 chances ";
 }
 
 // Heart Generator
